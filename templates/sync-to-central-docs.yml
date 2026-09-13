@@ -1,0 +1,48 @@
+name: Sync Documentation to Central Hub
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo's docs
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docs
+          sparse-checkout-cone-mode: false
+          path: source
+
+      - name: Checkout organization-docs
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/organization-docs
+          token: ${{ secrets.DOCS_SYNC_PAT }}
+          path: central
+
+      - name: Mirror docs into central hub
+        run: |
+          set -euo pipefail
+          DEST="central/docs/services/${{ github.event.repository.name }}"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          cp -r source/docs/. "$DEST"/
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          cd central
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "docs/services/${{ github.event.repository.name }}"
+          if git diff --cached --quiet; then
+            echo "No doc changes to sync."
+            exit 0
+          fi
+          git commit -m "docs: auto sync from ${{ github.event.repository.name }}"
+          git push

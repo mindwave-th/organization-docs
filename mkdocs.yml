@@ -1,0 +1,12 @@
+site_name: Organization Documentation
+theme:
+  name: material
+  palette:
+    primary: indigo
+
+plugins:
+  - search
+  - awesome-pages
+
+nav:
+  - Home: index.md
