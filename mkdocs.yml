@@ -7,6 +7,3 @@ theme:
 plugins:
   - search
   - awesome-pages
-
-nav:
-  - Home: index.md
