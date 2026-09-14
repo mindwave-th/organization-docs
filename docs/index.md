@@ -7,6 +7,10 @@ governance are wired up across the org.
 > **สำหรับทีม dev:** อ่านแผนการทำงาน / บทบาทของแต่ละ repo / SDD ก่อนที่
 > [`How we work`](how-we-work.md) — สรุปว่าแพลนไว้ยังไง และควรเริ่มงานจากตรงไหน
 
+> **กฎสำคัญ:** ถ้าเปลี่ยน working flow / org process ต้องอัปเดตเอกสารที่เกี่ยวใน change เดียวกัน
+> (ดู [`DOC_SYNC.md`](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md)
+> และส่วนใน [`How we work`](how-we-work.md#9-กฎ-เปลี่ยน-flow-แล้วต้องอัปเดตเอกสาร))
+
 ## Architecture
 
 ```mermaid
@@ -66,6 +70,9 @@ organization-docs → public docs (this site)
 That page covers Spec-Driven Development, rollout phases, and day-to-day
 expectations for developers. Private product detail stays in
 [`ai-dev-core`](https://github.com/mindwave-th/ai-dev-core).
+
+**Process changes require doc sync** — update related docs in the same
+change ([`DOC_SYNC.md`](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md)).
 
 ### 1. Central docs hub (this repo)
 
