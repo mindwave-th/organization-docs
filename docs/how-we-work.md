@@ -41,8 +41,8 @@ flowchart LR
 | [`.github`](https://github.com/mindwave-th/.github) | reusable workflows + issue/PR templates | CI / platform |
 | service repos | implement ตาม spec | Dev รายวัน |
 
-**สถานะล่าสุด:** `ai-dev-core` สร้างแล้ว และย้ายเนื้อหา hub ออกจาก
-`.github/ai-dev-core/` มาเป็น repo ของตัวเองแล้ว (เดิมอยู่ชั่วคราวใน `.github`)
+**สถานะล่าสุด:** `ai-dev-core` เป็น SoT แล้ว, `.github/ai-dev-core/` เป็น pointer README แล้ว,
+และทั้ง 6 service มี `AGENTS.md` + Cursor rules แล้ว
 
 ---
 
@@ -101,10 +101,10 @@ feature card พร้อมสถานะ ready
 |-------|-----|--------|
 | **1** | เนื้อหา hub (constitution, workflow, impact map, templates, ตัวอย่าง PDPA, product hub) | ✅ ทำแล้ว |
 | **1b** | เติม product hub (vision/mission/roadmap/feature cards) | ✅ ส่วนใหญ่ — เหลือเลือก 1 card `ready` แล้วรัน SDD จริงครั้งแรก |
-| **1c** | สร้าง private `ai-dev-core` + ย้ายเนื้อหาออกจาก `.github` | ✅ repo + import แล้ว — เหลือเปลี่ยน `.github/ai-dev-core/` เป็น pointer README |
-| **2** | ใส่ `AGENTS.md` + Cursor rules ใน 6 service repos | ⏳ ยังไม่ทำ |
+| **1c** | สร้าง private `ai-dev-core` + pointer ที่ `.github` | ✅ ทำแล้ว |
+| **2** | ใส่ `AGENTS.md` + Cursor rules ใน 6 service repos | ✅ ทำแล้ว |
 | **3** | ยึด OpenAPI ของ `mindwave-core-general` เป็นสัญญา + sync types ฝั่ง FE | ⏳ ยังไม่ทำ |
-| **4** | sync สรุป public-safe จาก `ai-dev-core` เข้า Pages (หน้านี้) | 🔄 เริ่มแล้ว (หน้านี้) |
+| **4** | sync สรุป public-safe จาก `ai-dev-core` เข้า Pages (หน้านี้) | ✅ หน้า how-we-work ขึ้นแล้ว |
 | **5** | รัน change จริงแนวตั้ง 1 ชิ้น (เช่น PDPA) ตามตัวอย่าง | ⏳ ยังไม่ทำ |
 
 ### CI / platform (คู่ขนาน)
@@ -135,12 +135,11 @@ feature card พร้อมสถานะ ready
 - ทำใน service repo นั้นได้เลย
 - แต่ถ้าแตะ schema / API / contract ใหม่ → กลับไปข้อด้านบน
 
-### ไฟล์ที่ควรมีในทุก service (Phase 2)
-
-คัดลอกจาก `ai-dev-core/service-templates/`:
+### ไฟล์ที่ทุก service มีแล้ว (Phase 2 ✅)
 
 - `AGENTS.md` ที่ root
-- `.cursor/rules/*.mdc`
+- `.cursor/rules/api-contract.mdc`
+- `.cursor/rules/coherence.mdc`
 
 ---
 
@@ -193,8 +192,8 @@ flowchart TB
 - ยังไม่บังคับ branch protection บน private service repos (ข้อจำกัดแผน GitHub Free)
 - Railway deploy ยังไม่เปิดผ่าน `deploy.yml`
 - `CODEOWNERS` ยังมี placeholder team
-- ยังไม่ได้ใส่ `AGENTS.md` ครบทุก service
-- ยังไม่ได้รัน SDD change จริง end-to-end ครั้งแรก
+- ยังไม่ได้รัน SDD change จริง end-to-end ครั้งแรก (Phase 5)
+- OpenAPI เป็นสัญญาครบวงจรฝั่ง FE ยังไม่ปิด (Phase 3)
 
 ถ้าสงสัยว่า “ของชิ้นนี้ควรอยู่ repo ไหน / ต้องมี spec ไหม” —
 เริ่มที่ **`ai-dev-core`** ก่อนเสมอ แล้วค่อยลงมือใน service
