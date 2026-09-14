@@ -180,6 +180,8 @@ flowchart TB
 | ลิงก์ | เพื่ออะไร |
 |------|-----------|
 | [ai-dev-core](https://github.com/mindwave-th/ai-dev-core) | SoT ส่วนตัว — product + SDD |
+| [DOC_SYNC.md](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md) | checklist เมื่อเปลี่ยน process flow |
+| [constitution.md](https://github.com/mindwave-th/ai-dev-core/blob/main/constitution.md) | หลักการองค์กร (§9 = docs sync) |
 | [.github](https://github.com/mindwave-th/.github) | reusable workflows |
 | [หน้าแรก organization-docs](index.md) | CI / secrets / inventory |
 | [docs/services/](services/) | README ที่ sync จากแต่ละ service |
@@ -197,3 +199,26 @@ flowchart TB
 
 ถ้าสงสัยว่า “ของชิ้นนี้ควรอยู่ repo ไหน / ต้องมี spec ไหม” —
 เริ่มที่ **`ai-dev-core`** ก่อนเสมอ แล้วค่อยลงมือใน service
+
+---
+
+## 9) กฎ: เปลี่ยน flow แล้วต้องอัปเดตเอกสาร
+
+**บังคับ:** ถ้าเปลี่ยนวิธีทำงานของทีม (บทบาท repo, ขั้นตอน SDD, เฟส rollout,
+ownership ใน impact map, CI/governance, หรือ flow รายวันของ dev)
+**ต้อง** อัปเดตเอกสารที่เกี่ยวข้องใน **PR / change เดียวกัน**
+หรือเปิด PR ที่ลิงก์กันในวันเดียวกัน
+
+Checklist ขั้นต่ำ (ข้ามได้เฉพาะข้อที่ไม่เกี่ยวกับงานจริง — และต้องบอกใน PR):
+
+1. `ai-dev-core` — `constitution.md` / `workflow.md` / `impact-map.md` / `ADOPTION.md` / `README.md` ตามที่เกี่ยว
+2. `organization-docs` — `docs/how-we-work.md` และ `docs/index.md` ถ้า process/inventory สาธารณะเปลี่ยน
+3. `.github` — root `README.md` ถ้า inventory ของ CI/org-defaults เปลี่ยน
+4. Service `AGENTS.md` / `.cursor/rules/` ถ้าคำสั่ง agent ต่อ repo เปลี่ยน (อัปเดต `service-templates/` แล้วค่อย roll out)
+
+การเปลี่ยน process โดยไม่อัปเดต docs = งานยังไม่จบ — ระดับเดียวกับ ship API โดยไม่อัปเดต OpenAPI
+
+รายละเอียดเต็ม:
+
+- [`DOC_SYNC.md`](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md)
+- [`constitution.md` §9](https://github.com/mindwave-th/ai-dev-core/blob/main/constitution.md)
