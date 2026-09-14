@@ -1,0 +1,147 @@
+name: Sync caller workflows to org repos
+
+# Lives here (not in mindwave-th/.github) because GitHub Actions does
+# not pass organization secrets to workflows running in the org's
+# special .github repo — confirmed empirically, not documented by
+# GitHub. Templates still live in mindwave-th/.github/caller-templates.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'  # weekly, catches newly created repos and template changes
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.ORG_WORKFLOW_SYNC_PAT }}
+      ORG: mindwave-th
+      # repos with their own bespoke workflows — never auto-managed
+      EXCLUDE_REPOS: ".github organization-docs"
+      BOT_BRANCH: automation/sync-workflows
+    steps:
+      - name: Checkout mindwave-th/.github (caller-templates source)
+        uses: actions/checkout@v4
+        with:
+          repository: mindwave-th/.github
+          token: ${{ secrets.ORG_WORKFLOW_SYNC_PAT }}
+          path: templates-src
+
+      - name: Sync every repo's workflows to match its stack template
+        working-directory: templates-src
+        run: |
+          set -euo pipefail
+
+          is_excluded() {
+            local repo="$1"
+            for x in $EXCLUDE_REPOS; do
+              [ "$repo" = "$x" ] && return 0
+            done
+            return 1
+          }
+
+          detect_stack() {
+            local repo="$1"
+            local langs
+            langs=$(gh api "repos/$ORG/$repo/languages" --jq 'keys | join(",")')
+            case ",$langs," in
+              *,TypeScript,*|*,JavaScript,*) echo node ;;
+              *,Python,*) echo python ;;
+              *,Rust,*) echo rust ;;
+              *) echo "" ;;
+            esac
+          }
+
+          # returns 0 (true) if remote file content differs from local template
+          # (or is missing), 1 if identical
+          needs_update() {
+            local repo="$1" branch="$2" dest="$3" local_src="$4"
+            local remote_b64 remote_content
+            remote_b64=$(gh api "repos/$ORG/$repo/contents/$dest?ref=$branch" --jq '.content // empty' 2>/dev/null || true)
+            if [ -z "$remote_b64" ]; then
+              return 0
+            fi
+            remote_content=$(echo "$remote_b64" | base64 -d)
+            local local_content
+            local_content=$(cat "$local_src")
+            [ "$remote_content" != "$local_content" ]
+          }
+
+          push_file() {
+            local repo="$1" branch="$2" dest="$3" src="$4"
+            local sha
+            sha=$(gh api "repos/$ORG/$repo/contents/$dest?ref=$branch" --jq '.sha // empty' 2>/dev/null || true)
+            local content_b64
+            content_b64=$(base64 < "$src" | tr -d '\n')
+            if [ -n "$sha" ]; then
+              gh api -X PUT "repos/$ORG/$repo/contents/$dest" \
+                -f message="chore: sync $dest from mindwave-th/.github" \
+                -f content="$content_b64" -f branch="$branch" -f sha="$sha" >/dev/null
+            else
+              gh api -X PUT "repos/$ORG/$repo/contents/$dest" \
+                -f message="chore: sync $dest from mindwave-th/.github" \
+                -f content="$content_b64" -f branch="$branch" >/dev/null
+            fi
+          }
+
+          repos=$(gh api "orgs/$ORG/repos" --paginate --jq '.[] | select(.archived == false) | .name')
+
+          for repo in $repos; do
+            if is_excluded "$repo"; then
+              echo "skip $repo (excluded)"
+              continue
+            fi
+
+            stack=$(detect_stack "$repo")
+            if [ -z "$stack" ]; then
+              echo "skip $repo (no recognized stack)"
+              continue
+            fi
+
+            default_branch=$(gh api "repos/$ORG/$repo" --jq '.default_branch')
+
+            declare -A FILES=(
+              [".github/workflows/ci.yml"]="caller-templates/$stack/ci.yml"
+              [".github/workflows/issue-triage.yml"]="caller-templates/shared/issue-triage.yml"
+              [".github/workflows/stale.yml"]="caller-templates/shared/stale.yml"
+            )
+
+            changed=0
+            for dest in "${!FILES[@]}"; do
+              src="${FILES[$dest]}"
+              if needs_update "$repo" "$default_branch" "$dest" "$src"; then
+                changed=1
+              fi
+            done
+
+            if [ "$changed" -eq 0 ]; then
+              echo "up to date: $repo ($stack)"
+              continue
+            fi
+
+            echo "syncing: $repo ($stack)"
+
+            base_sha=$(gh api "repos/$ORG/$repo/git/ref/heads/$default_branch" --jq '.object.sha')
+            if ! gh api "repos/$ORG/$repo/git/ref/heads/$BOT_BRANCH" >/dev/null 2>&1; then
+              gh api -X POST "repos/$ORG/$repo/git/refs" \
+                -f ref="refs/heads/$BOT_BRANCH" -f sha="$base_sha" >/dev/null
+            fi
+
+            for dest in "${!FILES[@]}"; do
+              src="${FILES[$dest]}"
+              if needs_update "$repo" "$BOT_BRANCH" "$dest" "$src"; then
+                push_file "$repo" "$BOT_BRANCH" "$dest" "$src"
+              fi
+            done
+
+            existing_pr=$(gh api "repos/$ORG/$repo/pulls?head=$ORG:$BOT_BRANCH&state=open" --jq '.[0].number // empty')
+            if [ -z "$existing_pr" ]; then
+              gh api -X POST "repos/$ORG/$repo/pulls" \
+                -f title="chore: sync workflows from mindwave-th/.github" \
+                -f head="$BOT_BRANCH" -f base="$default_branch" \
+                -f body="Automated sync of CI/issue-triage/stale workflows from [mindwave-th/.github](https://github.com/mindwave-th/.github) caller-templates. Review and merge." >/dev/null
+              echo "opened PR for $repo"
+            else
+              echo "updated existing PR #$existing_pr for $repo"
+            fi
+          done
