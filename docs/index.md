@@ -4,6 +4,9 @@ Central hub for `mindwave-th` — documentation aggregated from every
 service repo, plus a record of how CI/CD, issue automation, and repo
 governance are wired up across the org.
 
+> **สำหรับทีม dev:** อ่านแผนการทำงาน / บทบาทของแต่ละ repo / SDD ก่อนที่
+> [`How we work`](how-we-work.md) — สรุปว่าแพลนไว้ยังไง และควรเริ่มงานจากตรงไหน
+
 ## Architecture
 
 ```mermaid
@@ -24,20 +27,45 @@ flowchart TB
         J[caller-templates/]
     end
 
+    subgraph brain["ai-dev-core (private SoT)"]
+        N[product hub + SDD<br/>constitution / workflow / impact map]
+    end
+
     subgraph docshub["organization-docs (this repo, public)"]
         K[docs/services/*<br/>synced README/docs per repo]
         L[sync-workflows-to-repos.yml<br/>keeps every repo's caller<br/>workflows up to date]
         M[GitHub Pages deploy]
+        O[how-we-work.md<br/>public process overview]
     end
 
+    brain -->|guides specs & impact| repos
+    brain -.->|public-safe summaries| docshub
     repos -->|call workflow_call| central
     L -->|reads templates| J
     L -->|opens PR when drifted| repos
     repos -.->|manual: push docs/ folder| K
     K --> M
+    O --> M
 ```
 
 ## The four pieces
+
+### 0. How the team builds features (start here)
+
+See **[How we work](how-we-work.md)** for the intended layout:
+
+```text
+ai-dev-core (private) → specs / product
+        ↓
+service repos → implementation
+        ↓
+.github → CI only
+organization-docs → public docs (this site)
+```
+
+That page covers Spec-Driven Development, rollout phases, and day-to-day
+expectations for developers. Private product detail stays in
+[`ai-dev-core`](https://github.com/mindwave-th/ai-dev-core).
 
 ### 1. Central docs hub (this repo)
 
@@ -158,6 +186,7 @@ protected today but isn't yet.
 | mindwave-core-ai | Python | ✅ | ⛔ not rolled out | private |
 | mindwave-llm-core | Python (Docker) | ✅ | ⛔ not rolled out | private |
 | mindwave-core-general | Rust (Docker) | ✅ | ⛔ not rolled out | private |
+| **ai-dev-core** | product + SDD hub | n/a | n/a | **private** |
 | AI_OS | none (empty repo) | — | — | private |
 | organization-docs | Python/MkDocs | n/a | n/a | **public** |
 | .github | n/a (org defaults) | n/a | n/a | private |
