@@ -4,7 +4,7 @@
 repo ไหนทำอะไร งานไหลยังไง และควรเริ่มจากตรงไหน
 
 > รายละเอียดผลิตภัณฑ์ / backlog / strategy ที่เป็นความลับอยู่ที่
-> [`mindwave-th/ai-dev-core`](https://github.com/mindwave-th/ai-dev-core) (private)
+> [`mindwave-th/core-ai-dev`](https://github.com/mindwave-th/core-ai-dev) (private)
 > — หน้านี้เป็น **ภาพรวมสาธารณะ** ที่ปลอดภัยต่อการเปิดบน GitHub Pages
 
 ---
@@ -17,13 +17,13 @@ repo ไหนทำอะไร งานไหลยังไง และค�
 mindwave-th/
 ├── .github                 ← CI / org templates เท่านั้น
 ├── organization-docs       ← hub เอกสารสาธารณะ (หน้านี้ / GitHub Pages)
-├── ai-dev-core             ← private SoT: product + Spec-Driven Development
+├── core-ai-dev             ← private SoT: product + Spec-Driven Development
 └── service repos...        ← โค้ดจริงของแต่ละระบบ
 ```
 
 ```mermaid
 flowchart LR
-  ADC["ai-dev-core<br/>private SoT"]
+  ADC["core-ai-dev<br/>private SoT"]
   OD["organization-docs<br/>public Pages"]
   GH[".github<br/>reusable CI"]
   SR["service repos<br/>FE / BE / AI"]
@@ -36,12 +36,12 @@ flowchart LR
 
 | Repo | บทบาท | ใครใช้บ่อย |
 |------|--------|------------|
-| [`ai-dev-core`](https://github.com/mindwave-th/ai-dev-core) | สมองผลิตภัณฑ์ + มาตรฐาน SDD (constitution, workflow, impact map, product hub) | Product / lead / Cursor agent ตอนออกแบบ |
+| [`core-ai-dev`](https://github.com/mindwave-th/core-ai-dev) | สมองผลิตภัณฑ์ + มาตรฐาน SDD (constitution, workflow, impact map, product hub) | Product / lead / Cursor agent ตอนออกแบบ |
 | [`organization-docs`](https://github.com/mindwave-th/organization-docs) (ที่นี่) | รวมเอกสารที่เปิดได้ + บันทึก CI/governance ของ org | ทุกคน |
 | [`.github`](https://github.com/mindwave-th/.github) | reusable workflows + issue/PR templates | CI / platform |
 | service repos | implement ตาม spec | Dev รายวัน |
 
-**สถานะล่าสุด:** `ai-dev-core` เป็น SoT แล้ว, `.github/ai-dev-core/` เป็น pointer README แล้ว,
+**สถานะล่าสุด:** `core-ai-dev` เป็น SoT แล้ว, `.github/core-ai-dev/` เป็น pointer README แล้ว,
 และทั้ง 6 service มี `AGENTS.md` + Cursor rules แล้ว
 
 ---
@@ -49,7 +49,7 @@ flowchart LR
 ## 2) ทำไมต้องแยกแบบนี้
 
 - **`.github`** ควรเป็นแค่ org defaults + CI — ไม่ใช่ที่เก็บ product brain
-- **`ai-dev-core`** เป็น private workspace สำหรับ strategy → backlog → SDD
+- **`core-ai-dev`** เป็น private workspace สำหรับ strategy → backlog → SDD
   (ข้อมูลธุรกิจไม่ควรโผล่บน Pages)
 - **`organization-docs`** เป็นกระจกสาธารณะ: สถาปัตยกรรม, วิธีทำงาน,
   README ของ service ที่เปิดได้
@@ -69,7 +69,7 @@ contract-first (OpenAPI), และ impact / ownership map ใน multi-repo
 ```text
 Brainstorm
    ↓
-product/ ใน ai-dev-core   (strategy → … → backlog → trust)
+product/ ใน core-ai-dev   (strategy → … → backlog → trust)
    ↓
 feature card พร้อมสถานะ ready
    ↓
@@ -91,7 +91,7 @@ feature card พร้อมสถานะ ready
    ขอแค่ plan บอกชัดและไม่ทิ้งชั้นที่ต้องแตะ
 
 รายละเอียดเต็ม (private): ดู `workflow.md`, `constitution.md`,
-`impact-map.md` ใน `ai-dev-core`
+`impact-map.md` ใน `core-ai-dev`
 
 ---
 
@@ -101,10 +101,10 @@ feature card พร้อมสถานะ ready
 |-------|-----|--------|
 | **1** | เนื้อหา hub (constitution, workflow, impact map, templates, ตัวอย่าง PDPA, product hub) | ✅ ทำแล้ว |
 | **1b** | เติม product hub (vision/mission/roadmap/feature cards) | ✅ ส่วนใหญ่ — เหลือเลือก 1 card `ready` แล้วรัน SDD จริงครั้งแรก |
-| **1c** | สร้าง private `ai-dev-core` + pointer ที่ `.github` | ✅ ทำแล้ว |
+| **1c** | สร้าง private `core-ai-dev` + pointer ที่ `.github` | ✅ ทำแล้ว |
 | **2** | ใส่ `AGENTS.md` + Cursor rules ใน 6 service repos | ✅ ทำแล้ว |
 | **3** | ยึด OpenAPI ของ `mindwave-core-general` เป็นสัญญา + sync types ฝั่ง FE | ⏳ ยังไม่ทำ |
-| **4** | sync สรุป public-safe จาก `ai-dev-core` เข้า Pages (หน้านี้) | ✅ หน้า how-we-work ขึ้นแล้ว |
+| **4** | sync สรุป public-safe จาก `core-ai-dev` เข้า Pages (หน้านี้) | ✅ หน้า how-we-work ขึ้นแล้ว |
 | **5** | รัน change จริงแนวตั้ง 1 ชิ้น (เช่น PDPA) ตามตัวอย่าง | ⏳ ยังไม่ทำ |
 
 ### CI / platform (คู่ขนาน)
@@ -122,7 +122,7 @@ feature card พร้อมสถานะ ready
 
 ### ถ้างานเป็นฟีเจอร์ใหม่ / ข้ามหลาย repo
 
-1. เปิด Cursor ที่ **`ai-dev-core`** (ไม่ใช่ service เดี่ยวทันที)
+1. เปิด Cursor ที่ **`core-ai-dev`** (ไม่ใช่ service เดี่ยวทันที)
 2. อัปเดตหรืออ่าน `product/` ให้ตรงความเข้าใจล่าสุด
 3. สร้าง/เลือก feature card → เมื่อ `ready` แตกเป็น change
    (`spec` / `plan` / `tasks`)
@@ -179,9 +179,9 @@ flowchart TB
 
 | ลิงก์ | เพื่ออะไร |
 |------|-----------|
-| [ai-dev-core](https://github.com/mindwave-th/ai-dev-core) | SoT ส่วนตัว — product + SDD |
-| [DOC_SYNC.md](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md) | checklist เมื่อเปลี่ยน process flow |
-| [constitution.md](https://github.com/mindwave-th/ai-dev-core/blob/main/constitution.md) | หลักการองค์กร (§9 = docs sync) |
+| [core-ai-dev](https://github.com/mindwave-th/core-ai-dev) | SoT ส่วนตัว — product + SDD |
+| [DOC_SYNC.md](https://github.com/mindwave-th/core-ai-dev/blob/main/DOC_SYNC.md) | checklist เมื่อเปลี่ยน process flow |
+| [constitution.md](https://github.com/mindwave-th/core-ai-dev/blob/main/constitution.md) | หลักการองค์กร (§9 = docs sync) |
 | [.github](https://github.com/mindwave-th/.github) | reusable workflows |
 | [หน้าแรก organization-docs](index.md) | CI / secrets / inventory |
 | [docs/services/](services/) | README ที่ sync จากแต่ละ service |
@@ -198,7 +198,7 @@ flowchart TB
 - OpenAPI เป็นสัญญาครบวงจรฝั่ง FE ยังไม่ปิด (Phase 3)
 
 ถ้าสงสัยว่า “ของชิ้นนี้ควรอยู่ repo ไหน / ต้องมี spec ไหม” —
-เริ่มที่ **`ai-dev-core`** ก่อนเสมอ แล้วค่อยลงมือใน service
+เริ่มที่ **`core-ai-dev`** ก่อนเสมอ แล้วค่อยลงมือใน service
 
 ---
 
@@ -211,7 +211,7 @@ ownership ใน impact map, CI/governance, หรือ flow รายวัน
 
 Checklist ขั้นต่ำ (ข้ามได้เฉพาะข้อที่ไม่เกี่ยวกับงานจริง — และต้องบอกใน PR):
 
-1. `ai-dev-core` — `constitution.md` / `workflow.md` / `impact-map.md` / `ADOPTION.md` / `README.md` ตามที่เกี่ยว
+1. `core-ai-dev` — `constitution.md` / `workflow.md` / `impact-map.md` / `ADOPTION.md` / `README.md` ตามที่เกี่ยว
 2. `organization-docs` — `docs/how-we-work.md` และ `docs/index.md` ถ้า process/inventory สาธารณะเปลี่ยน
 3. `.github` — root `README.md` ถ้า inventory ของ CI/org-defaults เปลี่ยน
 4. Service `AGENTS.md` / `.cursor/rules/` ถ้าคำสั่ง agent ต่อ repo เปลี่ยน (อัปเดต `service-templates/` แล้วค่อย roll out)
@@ -220,5 +220,5 @@ Checklist ขั้นต่ำ (ข้ามได้เฉพาะข้อ�
 
 รายละเอียดเต็ม:
 
-- [`DOC_SYNC.md`](https://github.com/mindwave-th/ai-dev-core/blob/main/DOC_SYNC.md)
-- [`constitution.md` §9](https://github.com/mindwave-th/ai-dev-core/blob/main/constitution.md)
+- [`DOC_SYNC.md`](https://github.com/mindwave-th/core-ai-dev/blob/main/DOC_SYNC.md)
+- [`constitution.md` §9](https://github.com/mindwave-th/core-ai-dev/blob/main/constitution.md)
