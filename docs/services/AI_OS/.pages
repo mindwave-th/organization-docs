@@ -1,0 +1,6 @@
+title: Mindwave-AI
+nav:
+  - index.md
+  - kernel-core-design.md
+  - kernel-data-model.md
+  - operations-runbook.md
