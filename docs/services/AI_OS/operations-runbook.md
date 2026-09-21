@@ -8,41 +8,42 @@ environment. Related: `Docs/plans/0027-microservice-feature-services.md`,
 
 ## 1. Run modes / โหมดการรัน
 
+Everything is production: every image bakes its code (no bind-mounted source, no
+reload, no dev server).
+
 | Mode | Command | Console | Feature plugins |
 |---|---|---|---|
-| Monolith (default) | `docker compose up -d` | `http://localhost:5173` (vite) / API `:8000` | mounted in-process in `kernel-server` |
-| Services | `MOUNT_FEATURE_PLUGINS=0` in `.env`, then `docker compose --profile services up -d --build --force-recreate kernel-server web` and `docker compose --profile services up -d --build` | `http://localhost:8080` (gateway) | one container per service behind nginx |
+| Monolith (default) | `docker compose up -d --build` | `http://localhost:8000` (served by core) | mounted in-process in `kernel-server` |
+| Services | `MOUNT_FEATURE_PLUGINS=0` in `.env`, then `docker compose --profile services up -d --build` | `http://localhost:8080` (gateway) | one container per service behind nginx |
+| Single container (embedded PostgreSQL) | `docker build -t mindwave-ai .` then `docker run -d --privileged --cgroupns private -p 8000:8000 -v mindwave-data:/data mindwave-ai`; first-login password is in `docker logs`. Back up `/data` (keys in `secrets.env`). With `--env-file .env` + `DB_HOST` it uses an external DB and never generates keys. | `http://localhost:8000` | in-process |
 
 Notes:
 
-- `kernel-server` = C kernel + control plane in ONE container (they share a Unix
-  control socket). It is "core" in both modes.
-- In services mode set `VITE_PROXY_TARGET=http://gateway:80` in `.env` if the vite
-  dev `web` container must reach plugin routes.
-- Only the gateway publishes a port in services mode. `/internal/*` is 404 there.
+- `kernel-server` = C kernel + control plane + built console in ONE container (the
+  kernel and API share a Unix control socket). It is "core" in every mode. It is built
+  from the root `Dockerfile`; the kernel is always a Release build without a sanitizer.
+- Only the gateway publishes a port in services mode (core also keeps :8000). `/internal/*`
+  is 404 there. The gateway serves the console from the `web_dist` volume, filled by the
+  one-shot `web-static` job from the core image.
 - Regenerate gateway config after adding/changing a manifest `service` key:
   `python3 Core/Plugin/gen_gateway_conf.py` (test fails if stale).
 
 ## 2. Rebuild rules / เมื่อไหร่ต้อง rebuild
 
-Two different mount models — this is the most common source of "I changed the
-code but nothing happened".
+Code is baked into every image, so a plain restart runs the OLD code.
 
-| Component | How code gets in | After a change |
-|---|---|---|
-| `kernel-server` (core: `Server/`, `Core/Plugin/`, `Core/Kernel/`) | bind-mount `.:/work` | Python: restart/recreate the container (uvicorn is PID 1, no reload). C kernel: entrypoint runs cmake+make on every start, so recreate. Node plugin source: new jobs read it from disk, no restart. |
-| `web` (vite dev) | bind-mount `./Web` | hot reload. Plugin UI: edit `Core/Plugin/feature/<n>/ui`, run `python3 Core/Plugin/sync_ui.py`, check with `--check`. |
-| Service containers (catalogs, ethics, ..., clinical-safety) | **baked image** (`Docker/service.Dockerfile` COPYs `Server` and `Core/Plugin`) | `docker compose --profile services up -d --build <service>` — a plain restart runs the OLD code. |
-| `gateway` | bind-mount `Web/dist` + generated conf | rebuild web (`npx vite build` in the `web` container) and `nginx -s reload` / restart gateway after conf regeneration. |
+| Component | After a change |
+|---|---|
+| `kernel-server` (core: `Server/`, `Core/Plugin/`, `Core/Kernel/`, `Web/`) | `docker compose up -d --build kernel-server` (rebuilds console, kernel and API). Exception: `Core/Plugin` is mounted read-only from the repo, so a new or edited **node plugin** is read from disk without a rebuild; new jobs use it. |
+| Service containers (catalogs, ethics, ..., clinical-safety) | `docker compose --profile services up -d --build <service>` |
+| `plugin-host` | Reads `Core/Plugin/feature` from a read-only mount; approved plugins appear without a rebuild. |
+| `gateway` | Regenerate conf (`gateway-conf` one-shot) and `restart gateway`; after a `Web/` change also rebuild core and re-run `web-static`. |
 
-Rule of thumb: if the code path is served by a service container, rebuild the
-image; if it is served by `kernel-server`, recreate the container. A change to
-`Server/` that both core and a service import needs BOTH.
+Rule of thumb: a change to `Server/` that both core and a service import needs BOTH
+rebuilt. There is no hot reload; build errors (type-check, kernel compile) stop the image
+build before anything is replaced.
 
-Web check (must pass before handing over UI work):
-`docker compose exec -T web sh -lc 'cd /work/Web && npx tsc -b && npx vite build'`.
-
-Plugin tests:
+Python tests (inside the core image):
 `docker compose exec -T kernel-server bash -lc 'cd /work && python3 -m unittest discover -s Core/Plugin/tests -p "test_*.py"'`.
 
 ## 3. Migrations and one-off scripts / ลำดับ migration และสคริปต์ครั้งเดียว
@@ -159,7 +160,7 @@ expected for external plugins), `GET /admin/queue/jobs` for job state.
 2. `docker compose up -d --force-recreate kernel-server web` — core mounts all
    feature plugins again; routes are identical (71 verified).
 3. Point the web proxy back: remove `VITE_PROXY_TARGET` override (default
-   `http://localhost:8000`); console at `:5173`/`:8000`.
+   `http://localhost:8000`); console at `:8000`.
 4. Stop services: `docker compose --profile services stop` (or `down` for the
    profile's containers). Feature plugin enable/disable state
    (`console_documents.feature_plugins`) is shared, so it carries over unchanged.
@@ -181,12 +182,10 @@ Defaults are seeded by migration 0170 (never overwrites edits). Effect is only v
 when jobs queue: Kernel capacity (`max_concurrent`) is 1 by default, raise it in the
 same page to run several at once. Equal-level jobs are not strictly FIFO (observed).
 
-## Kernel build type and memory (measured 2026-09-21)
+## Kernel build and memory (measured 2026-09-21)
 
-The dev container builds the C kernel with Debug + AddressSanitizer by default. ASan
-keeps freed memory in a quarantine, so `mwkernel` RSS climbs about 45 KB per job (49 MB
-after ~100 jobs, ~2x slower, address space ~28 TB). That is not a leak. On servers set
-`KERNEL_BUILD_TYPE=Release` and `KERNEL_ASAN=OFF` in `.env` (read by the entrypoint).
+The kernel is built as Release without AddressSanitizer inside the image. (The earlier dev
+build used Debug + ASan, whose quarantine grew RSS about 45 KB per job; that is gone.)
 Release, measured: RSS 4.0 -> 4.3 MB after 300 jobs, 1 thread, 8 fds, flat.
 
 What a finished job leaves behind (checked after 30 and 300 jobs): no node process, no
@@ -195,12 +194,9 @@ stays flat. Job memory is bounded by the tier's cgroup limit and freed when the 
 exits. Long-lived caches have TTLs (settings 2 s, sessions per SERVICE_SESSION_CACHE_SECONDS,
 plugin state 5 s) or bounded rings (hook delivery log, queues).
 
-## Dev web container (port 5173) failed to start
+## Restoring the stack after a Docker reset
 
-Symptom: `docker compose ps` shows `web` Exited (137) with
-`joining network namespace of container: No such container`, and http://localhost:5173
-does not answer. Cause (fixed 2026-09-21): `web` used `network_mode: service:kernel-server`,
-so recreating kernel-server alone orphaned it. `web` now has its own network and publishes
-5173 itself; its proxy target is `VITE_PROXY_TARGET` (default `http://kernel-server:8000`,
-set `http://gateway:80` in `.env` for the microservice stack). After any `docker compose`
-change, `docker compose --profile services up -d` brings every service back.
+If Docker Desktop resets and containers vanish, `docker compose --profile services up -d`
+brings every service back; images, volumes and the host Postgres persist. Core needs
+`--privileged` and a private cgroup namespace (already set in `docker-compose.yml`); on a
+platform that cannot grant that, the API and console start but jobs cannot get a cgroup.

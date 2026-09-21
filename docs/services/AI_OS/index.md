@@ -58,7 +58,7 @@ cp .env.example .env
 **2. เริ่มระบบ**
 
 ```bash
-docker compose up -d                       # โหมด monolith  → console :5173, API :8000
+docker compose up -d                       # โหมด monolith  → console + API :8000
 docker compose --profile services up -d   # โหมด services  → gateway :8080
 ```
 
@@ -73,14 +73,47 @@ docker compose exec kernel-server python -m Server.api.create_admin
 
 | URL | คืออะไร |
 |---|---|
-| http://localhost:5173 | 🖥️ Console (Vite dev server) |
+| http://localhost:8000 | 🖥️ Console + Control plane API (core) |
 | http://localhost:8080 | 🚪 Gateway (โหมด services) |
-| http://localhost:8000 | 🔌 Control plane API |
 
 > [!TIP]
 > ถ้า Docker Desktop รีเซ็ตแล้วคอนเทนเนอร์หาย รัน
 > `docker compose --profile services up -d` เพื่อเรียกทุกอย่างกลับมา
 > (image และ Postgres บนโฮสต์ยังอยู่)
+
+### 🐳 รันด้วย Docker ไฟล์เดียว (ไม่ต้องมี Postgres ภายนอก ไม่ใช้ compose)
+
+`Dockerfile` ที่ root สร้าง image เดียวที่มีทั้ง Kernel (Release), control plane, console และ PostgreSQL
+ในตัว โค้ดฝังอยู่ใน image
+
+```bash
+docker build -t mindwave-ai .
+docker run -d --name mindwave --privileged --cgroupns private \
+  -p 8000:8000 -v mindwave-data:/data mindwave-ai
+docker logs mindwave        # ดู username / password สำหรับเข้าครั้งแรก (แสดงครั้งเดียว)
+```
+
+เปิด http://localhost:8000 ล็อกอินด้วย username `admin` กับรหัสสุ่มจาก log ระบบบังคับให้เปลี่ยนตอนเข้าครั้งแรก
+
+ครั้งแรกที่รัน (ไม่ตั้ง `DB_HOST`) container จะ:
+1. สร้างคีย์เข้ารหัสทั้ง 4 ตัว เก็บที่ `/data/secrets.env`
+2. เปิด PostgreSQL ในตัว (ข้อมูลอยู่ใน `/data/pgdata`) สร้างฐานข้อมูล `ai_core` และ `user_db`
+3. migrate และสร้างแอดมินคนแรก
+
+รีสตาร์ตครั้งถัดไปใช้คีย์และข้อมูลเดิมใน volume `mindwave-data` ไม่สร้างซ้ำ
+
+> [!WARNING]
+> **สำรอง volume `/data` โดยเฉพาะ `secrets.env`** ถ้าคีย์หาย ข้อมูลที่เข้ารหัสจะอ่านไม่ได้อีก
+> ตั้งชื่อแอดมินเองด้วย `-e ADMIN_EMAIL=... -e ADMIN_PASSWORD=...` ได้
+
+**ใช้ Postgres ภายนอก:** ใส่ `--env-file .env` (ต้องมี `DB_HOST`, `DB_PASSWORD`, `DB_NAME`, `USER_DB_NAME`
+และคีย์ทั้ง 4 ตัว) โหมดนี้ไม่สร้างคีย์ให้เอง เพื่อไม่ให้ทำข้อมูลที่เข้ารหัสไว้แล้วใช้ไม่ได้
+พอร์ตอ่านจาก `PORT` ถ้ามี ไม่เช่นนั้น `API_PORT` (8000)
+
+> [!WARNING]
+> Kernel แยก cgroup v2 ต่อหนึ่งงาน จึงต้องใช้ `--privileged --cgroupns private` ถ้าแพลตฟอร์มไม่ให้
+> (เช่น Railway) API และหน้า console จะขึ้น แต่ **งานจะรันไม่ได้** container จะเตือนใน log
+> image นี้เป็นโหมด monolith ส่วนโหมดแยก service ใช้ `docker compose --profile services`
 
 ## ⚙️ การตั้งค่า
 
@@ -88,8 +121,7 @@ docker compose exec kernel-server python -m Server.api.create_admin
   อ่านจาก `.env` เท่านั้น ใช้ `.env.example` เป็นแม่แบบ
 - 🎛️ **ค่าปฏิบัติการทั้งหมด** (ขีดจำกัด ระยะเก็บข้อมูล ความถี่สแกน plugin
   ระดับ priority hook) แก้ในคอนโซลที่เมนู **Settings** ไม่ต้อง restart
-- 🏭 **การ build Kernel** ค่าเริ่มต้นคือ Debug พร้อม ASan บนเซิร์ฟเวอร์จริงให้ตั้ง
-  `KERNEL_BUILD_TYPE=Release` และ `KERNEL_ASAN=OFF` ใน `.env`
+- 🏭 **การ build Kernel** เป็น Release ไม่มี sanitizer เสมอ (กำหนดใน `Dockerfile` ไม่มีตัวแปรให้ตั้ง)
 
 > [!WARNING]
 > ห้าม commit `.env` และต้องสำรองไฟล์คีย์ก่อน deploy เพราะถ้าคีย์หาย
@@ -246,8 +278,7 @@ stateDiagram-v2
 `max_concurrent` ใน Kernel config tier ที่ตั้งไว้เรียงต่ำไปสูง:
 `free` (30) → `plus` (20) → `premium` (10) → `dev` (0) โดย free กับ plus ถูกแทรกได้
 
-**การ build:** ค่าเริ่มต้น Debug + ASan บนเซิร์ฟเวอร์ตั้ง `KERNEL_BUILD_TYPE=Release`
-และ `KERNEL_ASAN=OFF` ใน `.env`
+**การ build:** Release ไม่มี sanitizer เสมอ (สร้างในขั้นตอนของ `Dockerfile`)
 
 > [!NOTE]
 > งานระดับ priority เดียวกันยังไม่รับประกันลำดับเข้าก่อนออกก่อน (FIFO) เคร่งครัด
@@ -419,7 +450,6 @@ Credentials, Accounts, Roles, Plugin Registry, Event Hooks, Settings, System Mon
 | service ต่อ plugin | `catalogs`, `ethics`, `channel-credentials`, `workflows-clone`, `flow-control`, `runtime`, `channel-webhooks`, `widget`, `clinical-safety` |
 | `plugin-host` | mount plugin ที่อนุมัติใหม่แบบสดภายใต้ `/x/<plugin>/` |
 | `gateway` | nginx :8080 config สร้างจาก manifest ด้วย `gen_gateway_conf.py` |
-| `web` | Vite dev server :5173 |
 
 service **ไม่ถือคีย์เข้ารหัส** และไม่ mount `.env` เรียก `/internal/*` ของ core ด้วยโทเคนเฉพาะ
 service (เช่น ขอเขียน audit ผ่านแกนกลาง ไม่เขียน `control_events` เอง) และมี login Postgres
@@ -464,6 +494,7 @@ Mindwave-AI/
 ├── Web/                   console
 ├── Docker/                entrypoint, service image, config ของ gateway
 ├── Docs/                  เอกสารออกแบบ แผนงาน และ runbook
+├── Dockerfile             image รวมทั้งระบบในไฟล์เดียว
 ├── docker-compose.yml
 └── requirements.txt       dependency ที่ lock แล้ว
 ```
@@ -478,12 +509,8 @@ Mindwave-AI/
 docker compose exec -T kernel-server bash -lc \
   'cd /work && python3 -m unittest discover -s Core/Plugin/tests -p "test_*.py"'
 
-# ตรวจชนิดและ build เว็บ
-docker compose exec -T web sh -lc 'cd /work/Web && npx tsc -b && npx vite build'
-
-# Kernel ในคอนเทนเนอร์ dev แบบ Linux
-docker compose build kernel-dev && ./kernel-dev.sh bash -c \
-  "cd Core/Kernel/build && cmake .. && make && ctest"
+# build image ใหม่หลังแก้โค้ด (ขั้น build จะ type-check และ build เว็บ กับ Kernel ให้ด้วย)
+docker compose up -d --build
 ```
 
 </details>
