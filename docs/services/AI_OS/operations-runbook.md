@@ -81,6 +81,11 @@ automatically. Do not run 3-5 while the matching key is missing or wrong: check
 
 ## 4. Databases / ฐานข้อมูล
 
+Prepare a server once (both databases must already exist; other databases on the server are never touched):
+`python -m Server.db.init_databases --system-db ai_sys --user-db user_db` (`--check` reports only). It runs the
+same migrations the container runs at start and does not create accounts; the app creates the first admin
+on its first start (password in the log). Set `DB_NAME` / `USER_DB_NAME` to the same two names in the service.
+
 - `ai_core` (system DB, `DB_NAME`): control plane, console documents, jobs, audit.
 - User DB (`USER_DB_NAME`, own host/user via `USER_DB_*` when set): all personal
   data (perma, memory, suicide assessments, chat content). Kept separate on purpose;

@@ -112,6 +112,34 @@ Endpoints created from the web console with no code deploy. Each one maps a path
 ### `control_events`
 Append-only. Two jobs: (1) the audit trail for every config change ("no hardcode" requires a config to actually be changed by *someone*, traceably), and (2) the backing store for the realtime WebSocket feed to the console — the console can also replay recent events on reconnect instead of needing a persistent connection to never drop. `entity_type`/`entity_id` is a polymorphic reference (no FK constraint) since an event can point at a tool, a job, a priority policy, or an endpoint.
 
+## Identity model (accounts, credentials, personal data)
+
+An operator account is split across **two databases and three kinds of data**, linked only by a UUID:
+
+```mermaid
+erDiagram
+    accounts ||--|| credentials : "account_id (UUID)"
+    accounts ||--o{ user_roles : "user_id (UUID)"
+    accounts ||--o{ sessions : "user_id (UUID)"
+    accounts ||..o| user_data : "UUID, no FK (other database)"
+    accounts { uuid id PK "gen_random_uuid()"  text status  bool must_change_credentials  bool profile_completed }
+    credentials { uuid account_id PK  text username "lower-case, never an email"  text password_hash }
+    user_data { uuid user_id PK "= accounts.id"  text email_encrypted "optional"  text email_lookup "blind index, optional"  text profile_encrypted  jsonb extra_grants  jsonb denied_grants }
+```
+
+| Data | Lives in | Notes |
+|---|---|---|
+| Account anchor (UUID, status, flags) | `ai_core.accounts` | UUID primary key |
+| Username + password hash | `ai_core.credentials` | Login handle, unique, lower-case, `CHECK` rejects `@`. No personal data |
+| Roles, sessions | `ai_core.user_roles`, `ai_core.sessions` | Keyed by the account UUID |
+| Email, profile (name, phone...) | `user_db.user_data` | Fernet-encrypted; email is optional; keyed by the same UUID |
+
+Consequences: login reads only `ai_core.credentials` (the user database is not opened to authenticate); an
+`ai_core` dump contains no email or profile, not even ciphertext; the user database holds no username or
+password. There is no foreign key across databases, so the application creates and deletes both halves
+(user data commits first, compensated on failure). Migrations: `ai_core` 0180, user database 0080. Both
+rebuild the identity tables and refuse to run when accounts already exist.
+
 ## Deliberately Not Modeled Here
 
 - **Cluster node registry** — now speced in `Docs/kernel-clustering-design.md` (sub-project E: `kernel_nodes` table, `kernel_config` singleton→per-node, `jobs.node_id`), not part of this document's schema.

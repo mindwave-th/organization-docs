@@ -104,7 +104,7 @@ docker logs mindwave        # ดู username / password สำหรับเ�
 
 > [!WARNING]
 > **สำรอง volume `/data` โดยเฉพาะ `secrets.env`** ถ้าคีย์หาย ข้อมูลที่เข้ารหัสจะอ่านไม่ได้อีก
-> ตั้งชื่อแอดมินเองด้วย `-e ADMIN_EMAIL=... -e ADMIN_PASSWORD=...` ได้
+> ตั้งชื่อแอดมินเองด้วย `-e ADMIN_USERNAME=... -e ADMIN_PASSWORD=...` ได้
 
 **ใช้ Postgres ภายนอก:** ใส่ `--env-file .env` (ต้องมี `DB_HOST`, `DB_PASSWORD`, `DB_NAME`, `USER_DB_NAME`
 และคีย์ทั้ง 4 ตัว) โหมดนี้ไม่สร้างคีย์ให้เอง เพื่อไม่ให้ทำข้อมูลที่เข้ารหัสไว้แล้วใช้ไม่ได้
@@ -475,6 +475,9 @@ service (เช่น ขอเขียน audit ผ่านแกนกลา
 - **สิทธิ์ต่อ service:** login Postgres แยกต่อ service พร้อม Row-Level Security บน
   `console_documents` และไฟล์ migration ใน `Server/db/migrations/` (ระบบ) กับ
   `migrations_user/` (ข้อมูลผู้ใช้) ตารางส่วนบุคคลใหม่ต้องอยู่ใน `migrations_user/` เสมอ
+- **บัญชีแยกเป็นสามส่วน เชื่อมด้วย UUID เท่านั้น:** `ai_core.accounts` (UUID + สถานะ), `ai_core.credentials`
+  (username + password hash, username ไม่ใช่อีเมล) และ `user_db.user_data` (อีเมลและโปรไฟล์ที่เข้ารหัส
+  อีเมลเป็นทางเลือก) ล็อกอินอ่านแค่ `credentials` ส่วน dump ของ `ai_core` ไม่มีอีเมลหรือโปรไฟล์เลย
 - **Migration:** ทำงานอัตโนมัติทุกครั้งที่ `kernel-server` เริ่ม
 
 **เอกสาร:** [Data model](kernel-data-model.md), Key backup
