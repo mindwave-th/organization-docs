@@ -113,6 +113,8 @@ docker logs mindwave        # ดู username / password สำหรับเ�
 > [!WARNING]
 > Kernel แยก cgroup v2 ต่อหนึ่งงาน จึงต้องใช้ `--privileged --cgroupns private` ถ้าแพลตฟอร์มไม่ให้
 > (เช่น Railway) API และหน้า console จะขึ้น แต่ **งานจะรันไม่ได้** container จะเตือนใน log
+> ตั้ง `MWKERNEL_CGROUP=off` เพื่อให้รันได้บนแพลตฟอร์มแบบนั้น งานจะ **ไม่ถูกจำกัด CPU/หน่วยความจำ**
+> (ยังจัดคิวตาม priority และยกเลิกทั้งกลุ่มโปรเซสได้) ไม่ควรใช้กับงานที่ไม่น่าไว้ใจ
 > image นี้เป็นโหมด monolith ส่วนโหมดแยก service ใช้ `docker compose --profile services`
 
 ## ⚙️ การตั้งค่า

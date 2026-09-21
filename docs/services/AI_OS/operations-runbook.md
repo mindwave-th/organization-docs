@@ -205,3 +205,6 @@ If Docker Desktop resets and containers vanish, `docker compose --profile servic
 brings every service back; images, volumes and the host Postgres persist. Core needs
 `--privileged` and a private cgroup namespace (already set in `docker-compose.yml`); on a
 platform that cannot grant that, the API and console start but jobs cannot get a cgroup.
+Set `MWKERNEL_CGROUP=off` there (e.g. a Railway variable) and the kernel runs jobs without
+per-job cgroups: no CPU/memory limits, priority scheduling still applies, and a cancelled or
+finished job's whole process group is killed. Unset it wherever `--privileged` is available.
