@@ -100,7 +100,8 @@ feature card พร้อมสถานะ ready
 | Clinical safety | โค้ดด้าน crisis / persona / prompt / คะแนนแบบประเมิน ต้องมีคนตรวจที่รู้ว่าเป็นงาน safety-critical |
 | Secrets & ข้อมูลผู้ใช้ | agent ไม่แตะ secrets, ข้อมูลผู้ใช้จริง, production หรือการ deploy |
 | หยุดถาม | เรื่อง product/clinical/ราคา/security, repo นอกแผน, งานทำลายข้อมูล หรือ verify ไม่ได้ |
-| ทีละ task + Handoff | 1 task = 1 branch = 1 PR; จบ session ต้องอัปเดต Handoff ใน `tasks.md` |
+| ทีละ task + Handoff | 1 task = 1 branch = 1 PR; จบ session เขียน Handoff ทับของเดิม (≤ 10 บรรทัด) ใน `tasks.md` |
+| งบ context (กันเอกสารบวม) | agent อ่านแค่ชั้น Hot (`RULES.md` + `AGENTS.md`) ทุก session, อ่าน task card เดียวต่องาน, ที่เหลือค้นเฉพาะจุด — CI ตรวจงบ token และลิงก์ |
 
 รายละเอียดเต็ม (private): ดู `workflow.md`, `constitution.md`,
 `impact-map.md` ใน `core-ai-dev`
