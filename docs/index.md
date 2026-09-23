@@ -150,38 +150,28 @@ From `mindwave-th/.github`:
   placeholder team (`@mindwave-th/maintainers`) that doesn't exist yet.
   Auto-request-review won't work until real usernames/team replace it.
 
-### 4. PR / branch rules — partially blocked by plan
+### 4. PR / branch rules — decided, awaiting org upgrade
 
-This is the one piece that isn't where it should be, and it's worth
-understanding exactly why:
+- **Why it was blocked:** GitHub Free cannot enforce required reviews or
+  required status checks on private repos (tested against both branch
+  protection and rulesets APIs).
+- **Decision (2026-09-23):** upgrade the org to **GitHub Team** with 3 seats —
+  `Phichetlog10` (product owner, internal clinical lead), `Pakawat-Tan`
+  (dev), `teerapon19` (DevOps). Outside collaborator `AumChayanon` and the
+  unused `mindwavehealth` account are to be removed after pre-checks
+  (e.g. who owns `ORG_WORKFLOW_SYNC_PAT`).
+- **Planned rules:** one org ruleset on integration/deploy branches of every
+  repo except the private product hub — pull request required (0 approvals),
+  code-owner review required, conversations resolved, no force-push or
+  deletion, empty bypass list. Required CI checks are added per repo.
+- **Review model:** agent PRs are cross-reviewed (Phichet ↔ Pakawat);
+  infra paths are owned by Teerapon; clinical-safety paths follow
+  risk tiers A/B/C, with tier A needing a licensed clinician's sign-off.
+- **Repo side already prepared:** branch `chore/agent-protocol-v2` in each
+  service repo adds `AGENTS.md`, `.github/CODEOWNERS` and a PR template.
 
-- **GitHub Free cannot enforce required-reviews or required-status-checks
-  on a private repo.** Tested directly against both the classic branch
-  protection API and the newer rulesets API — both return
-  *"Upgrade to GitHub Pro or make this repository public."* No API
-  trick gets around this; it's a hard platform gate.
-- The org's 4 real members (`Pakawat-Tan`, `teerapon19`, `Phichetlog10`,
-  `mindwavehealth`) are **all org Owners**, who always get admin on
-  every repo regardless of any repo-level permission setting — so even
-  on a paid plan, owners bypass branch protection unless
-  `enforce_admins: true` is explicitly set. Only one outside
-  collaborator, `AumChayanon` (write access on the two `interface-*`
-  Node repos), is actually restrictable today.
-- **Decision made, not yet executed:** demote `mindwavehealth` from
-  Owner to Member (keeping `Pakawat-Tan`, `teerapon19`, `Phichetlog10`
-  as Owners), then give it explicit `Write` role per repo. This is
-  least-privilege hygiene, but **on its own does not block direct
-  pushes to `main`** on the private repos — branch protection is still
-  unavailable there regardless of role, until the repo goes public or
-  the org upgrades to GitHub Team ($4/user/month).
-- **What actually works today:** `organization-docs` is public, so real
-  branch protection *could* be applied there right now — **it has not
-  been applied yet** (still unprotected as of this writing).
-
-**Net status:** no repo currently blocks direct pushes to `main`. The
-6 private service repos can't get real enforcement without either
-going public or an org plan upgrade; `organization-docs` could be
-protected today but isn't yet.
+**Net status:** until the upgrade and ruleset are applied, no private repo
+blocks direct pushes to `main`.
 
 ## Repo inventory
 

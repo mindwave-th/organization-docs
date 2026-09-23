@@ -90,6 +90,17 @@ feature card พร้อมสถานะ ready
 4. **ลำดับ implement ยืดหยุ่น** — data-first / UI-first / parallel ได้
    ขอแค่ plan บอกชัดและไม่ทิ้งชั้นที่ต้องแตะ
 
+### ใครทำอะไร
+
+| คน | บทบาท |
+|---|---|
+| Phichet | Product owner + clinical lead ภายใน — สั่ง AI ทำ feature |
+| Pakawat | Dev — สั่ง AI ทำงานระบบ |
+| Teerapon | DevOps — CI/CD, secrets, GitHub org settings |
+
+ใครสั่ง AI ทำงาน อีกคนเป็นคน review (Phichet ↔ Pakawat); งาน infra ให้ Teerapon review;
+งานด้าน clinical แบ่งระดับ A/B/C — ระดับ A ต้องมีผู้เชี่ยวชาญที่มีใบอนุญาต sign-off
+
 ### เมื่อ AI agent เป็นผู้พัฒนาหลัก (constitution Part B)
 
 | กติกา | สรุป |
