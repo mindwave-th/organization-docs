@@ -90,6 +90,18 @@ feature card พร้อมสถานะ ready
 4. **ลำดับ implement ยืดหยุ่น** — data-first / UI-first / parallel ได้
    ขอแค่ plan บอกชัดและไม่ทิ้งชั้นที่ต้องแตะ
 
+### เมื่อ AI agent เป็นผู้พัฒนาหลัก (constitution Part B)
+
+| กติกา | สรุป |
+|---|---|
+| คนตัดสินใจและ merge | agent เสนอ คน approve spec/plan และ merge PR — agent ไม่ push เข้า branch หลัก/branch ที่ deploy |
+| หลักฐานก่อน "เสร็จ" | รันคำสั่ง verify จริงในรอบนั้น แนบผลใน PR — ไม่มี test ที่ใช้ได้ = ต้องเพิ่ม test เป็นส่วนหนึ่งของงาน |
+| โค้ดคือความจริง | อ่านโค้ดก่อนเชื่อเอกสาร เจอเอกสารไม่ตรงให้แก้หรือแจ้ง |
+| Clinical safety | โค้ดด้าน crisis / persona / prompt / คะแนนแบบประเมิน ต้องมีคนตรวจที่รู้ว่าเป็นงาน safety-critical |
+| Secrets & ข้อมูลผู้ใช้ | agent ไม่แตะ secrets, ข้อมูลผู้ใช้จริง, production หรือการ deploy |
+| หยุดถาม | เรื่อง product/clinical/ราคา/security, repo นอกแผน, งานทำลายข้อมูล หรือ verify ไม่ได้ |
+| ทีละ task + Handoff | 1 task = 1 branch = 1 PR; จบ session ต้องอัปเดต Handoff ใน `tasks.md` |
+
 รายละเอียดเต็ม (private): ดู `workflow.md`, `constitution.md`,
 `impact-map.md` ใน `core-ai-dev`
 
@@ -105,7 +117,8 @@ feature card พร้อมสถานะ ready
 | **2** | ใส่ `AGENTS.md` + Cursor rules ใน 6 service repos | ✅ ทำแล้ว |
 | **3** | ยึด OpenAPI ของ `mindwave-core-general` เป็นสัญญา + sync types ฝั่ง FE | ⏳ ยังไม่ทำ |
 | **4** | sync สรุป public-safe จาก `core-ai-dev` เข้า Pages (หน้านี้) | ✅ หน้า how-we-work ขึ้นแล้ว |
-| **5** | รัน change จริงแนวตั้ง 1 ชิ้น (เช่น PDPA) ตามตัวอย่าง | ⏳ ยังไม่ทำ |
+| **5** | รัน change จริงแนวตั้ง 1 ชิ้น — เลือก Mindwave Plus / Pro เป็นชิ้นแรก | ⏳ spec/plan เสร็จ รอเริ่ม implement |
+| **6** | กติกา AI agent เป็นผู้พัฒนาหลัก (constitution Part B, `AGENTS.md` แบบ tool-neutral, PR checklist) | ⏳ เขียนกติกาแล้ว — รอ roll out ทีละ repo |
 
 ### CI / platform (คู่ขนาน)
 
@@ -122,12 +135,12 @@ feature card พร้อมสถานะ ready
 
 ### ถ้างานเป็นฟีเจอร์ใหม่ / ข้ามหลาย repo
 
-1. เปิด Cursor ที่ **`core-ai-dev`** (ไม่ใช่ service เดี่ยวทันที)
+1. เปิด AI agent (Claude Code, Cursor, …) ที่ **`core-ai-dev`** (ไม่ใช่ service เดี่ยวทันที)
 2. อัปเดตหรืออ่าน `product/` ให้ตรงความเข้าใจล่าสุด
 3. สร้าง/เลือก feature card → เมื่อ `ready` แตกเป็น change
    (`spec` / `plan` / `tasks`)
 4. กรอก impact จาก impact map
-5. implement ใน service repos ตาม tasks (ลิงก์ PR ข้าม repo ใน plan)
+5. implement ใน service repos **ทีละ task** — branch ใหม่ → verify จริง → PR พร้อมหลักฐาน → คน review/merge
 6. ปิด acceptance แล้ว archive change
 
 ### ถ้างานเล็กใน repo เดียว (bugfix, UI copy)
@@ -137,7 +150,7 @@ feature card พร้อมสถานะ ready
 
 ### ไฟล์ที่ทุก service มีแล้ว (Phase 2 ✅)
 
-- `AGENTS.md` ที่ root
+- `AGENTS.md` ที่ root (จุดเริ่มของทุก agent — กำลังอัปเดตเป็น template ใหม่ตาม Phase 6)
 - `.cursor/rules/api-contract.mdc`
 - `.cursor/rules/coherence.mdc`
 
