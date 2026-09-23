@@ -161,12 +161,13 @@ From `mindwave-th/.github`:
   unused `mindwavehealth` account are to be removed after pre-checks
   (e.g. who owns `ORG_WORKFLOW_SYNC_PAT`).
 - **Planned rules:** one org ruleset on integration/deploy branches of every
-  repo except the private product hub — pull request required (0 approvals),
+  repo except the private product hub — pull request required (1 approval),
   code-owner review required, conversations resolved, no force-push or
   deletion, empty bypass list. Required CI checks are added per repo.
-- **Review model:** agent PRs are cross-reviewed (Phichet ↔ Pakawat);
-  infra paths are owned by Teerapon; clinical-safety paths follow
-  risk tiers A/B/C, with tier A needing a licensed clinician's sign-off.
+- **Review model:** code review pairs — Phichet's PRs → Pakawat,
+  Pakawat's → Teerapon, Teerapon's → Pakawat. Phichet reviews clinical
+  content only; clinical-safety paths follow risk tiers A/B/C, with tier A
+  needing a licensed clinician's sign-off.
 - **Repo side already prepared:** branch `chore/agent-protocol-v2` in each
   service repo adds `AGENTS.md`, `.github/CODEOWNERS` and a PR template.
 
