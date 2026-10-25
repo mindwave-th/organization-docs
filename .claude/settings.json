@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git push * main*)",
+      "Bash(git push * develop*)",
+      "Bash(git push * staging*)",
+      "Bash(git push * production*)",
+      "Bash(git push *:main*)",
+      "Bash(git push *:develop*)",
+      "Bash(git push *:staging*)",
+      "Bash(git push *:production*)",
+      "Bash(git push --force*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push * --delete *)",
+      "Bash(git push * -d *)",
+      "Bash(git -C * push *)",
+      "Bash(git --git-dir*)",
+      "Bash(git --work-tree*)",
+      "Bash(gh pr merge *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo rename *)",
+      "Bash(gh repo archive *)",
+      "Bash(gh api * -X DELETE *)",
+      "Bash(gh api * --method DELETE *)",
+      "Bash(gh api * -X PUT *)",
+      "Bash(gh api * --method PUT *)",
+      "Bash(gh secret *)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr edit *)"
+    ],
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git fetch *)",
+      "Bash(git branch)",
+      "Bash(git branch -r*)",
+      "Bash(git branch -a*)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(gh repo view *)"
+    ]
+  }
+}
